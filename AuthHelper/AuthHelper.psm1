@@ -158,6 +158,8 @@ function Invoke-RestMethodWithClientCredentials() {
     $accessToken = Get-AuthTokenWithClientCredentials -Environment $Environment -Client $AuthClient -Scope $AuthScope
     $headers["Authorization"] = "Bearer $accessToken"
 
+    Write-Verbose "Calling URI: $Uri"
+
     #TODO: other cases where body is not required
     if ($Method -eq "Get") {
         Invoke-RestMethod `
@@ -321,11 +323,6 @@ function Remove-AuthHelperCredentials() {
 }
 
 
-function Test-AuthHelper() {
-    Get-StoreFromConfig | ConvertTo-Json
-}
-
-
 Export-ModuleMember -Function Get-AuthHelperCredentials
 Export-ModuleMember -Function Get-AuthTokenWithClientCredentials
 Export-ModuleMember -Function Clear-AuthTokenCache
@@ -334,4 +331,3 @@ Export-ModuleMember -Function Get-AuthHelperDefaultEnvironment
 Export-ModuleMember -Function Set-AuthHelperDefaultEnvironment
 Export-ModuleMember -Function Add-AuthHelperCredentials
 Export-ModuleMember -Function Remove-AuthHelperCredentials
-Export-ModuleMember -Function Test-AuthHelper
