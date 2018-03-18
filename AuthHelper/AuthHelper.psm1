@@ -271,8 +271,11 @@ function Import-CredentialsFromJson(
     $store = [CredentialStore]::new()
     $ht["Environments"] | Foreach-Object {
         $env = [CredentialEnvironment]::new($_.Name)
-        $_.Credentials | Foreach-Object {
-            $env.AddCredentials([Credentials]::new($_.ClientKey, $_.ClientSecret))
+        # Foreach-Object will iterate once over $null, which is not what we want.
+        if ($_.Credentials -ne $null) {
+            $_.Credentials | Foreach-Object {
+                $env.AddCredentials([Credentials]::new($_.ClientKey, $_.ClientSecret))
+            }
         }
         $store.AddEnvironment($env)
     }
@@ -317,6 +320,9 @@ function Remove-AuthHelperCredentials() {
         if ($Environment -eq $env.Name) {
             # Remove any old values for the same client key
             $env.Credentials = $env.Credentials | ? ClientKey -ne $ClientKey
+            if ($env.Credentials -eq $null) {
+                $env.Credentials = @()
+            }
         }
     }
     $store | ConvertTo-Json -Depth 100 > $CONFIG_PATH
