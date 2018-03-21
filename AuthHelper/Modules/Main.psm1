@@ -1,7 +1,7 @@
 $CONFIG_PATH = "~\.AuthHelper.json"
 $ENV_LOCAL = "Local"
 $ENV_STAGING = "Staging"
-$ENV_PRODUCTION = "Production"
+$ENV_PRODUCTION = "DomainProduction"
 
 function Fetch-AuthToken() {
     [CmdletBinding()]
@@ -15,13 +15,13 @@ function Fetch-AuthToken() {
     )
 
     switch ($Environment) {
-        "Local" {
+        $ENV_LOCAL {
             $authUri = "https://stage-auth.domain.com.au/v1/connect/token"
         }
-        "Staging" {
+        $ENV_STAGING {
             $authUri = "https://stage-auth.domain.com.au/v1/connect/token"
         }
-        "Production" {
+        $ENV_PRODUCTION {
             $authUri = "https://auth.domain.com.au/v1/connect/token"
         }
     }
@@ -160,7 +160,7 @@ function Clear-AuthTokenCache() {
 
 function Get-AuthHelperDefaultEnvironment() {
     if (!(Test-Path Variable:Global:AuthHelperDefaultEnvironment)) {
-        Set-Variable -Name AuthHelperDefaultEnvironment -Scope Global -Value $ENV_STAGING
+        Set-Variable -Name AuthHelperDefaultEnvironment -Scope Global -Value $ENV_PRODUCTION
     }
     Return $AuthHelperDefaultEnvironment
 }

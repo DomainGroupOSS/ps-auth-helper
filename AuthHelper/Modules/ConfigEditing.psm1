@@ -1,7 +1,7 @@
 $CONFIG_PATH = "~\.AuthHelper.json"
 $ENV_LOCAL = "Local"
 $ENV_STAGING = "Staging"
-$ENV_PRODUCTION = "Production"
+$ENV_PRODUCTION = "DomainProduction"
 
 class CredentialStore
 {
