@@ -67,7 +67,7 @@ function Convert-PSCustomObjectToHashtable($obj) {
 function Get-AuthHelperCredentials() {
     [CmdletBinding()]
     param()
-    $store = Get-StoreFromConfig
+    $store = Get-AuthHelperStoreFromConfig
 
     $store.Environments | Foreach-Object {
         Write-Host "# "  $_.Name
@@ -79,7 +79,7 @@ function Get-AuthHelperCredentials() {
 
 
 
-function Get-StoreFromConfig() {
+function Get-AuthHelperStoreFromConfig() {
     if (!(Test-Path $CONFIG_PATH)) {
         $store = [CredentialStore]::new()
         $store.AddEnvironment($ENV_LOCAL)
@@ -123,7 +123,7 @@ function Add-AuthHelperCredentials() {
         [string]$ClientSecret
     )
 
-    $store = Get-StoreFromConfig
+    $store = Get-AuthHelperStoreFromConfig
     $store.Environments | Foreach-Object {
         $env = $_
         if ($Environment -eq $env.Name) {
@@ -143,7 +143,7 @@ function Remove-AuthHelperCredentials() {
         [Parameter(Mandatory=$true)]
         [string]$ClientKey
     )
-    $store = Get-StoreFromConfig
+    $store = Get-AuthHelperStoreFromConfig
     $store.Environments | Foreach-Object {
         $env = $_
         if ($Environment -eq $env.Name) {
@@ -159,6 +159,7 @@ function Remove-AuthHelperCredentials() {
 
 
 
+Export-ModuleMember -Function Get-AuthHelperStoreFromConfig
 Export-ModuleMember -Function Get-AuthHelperCredentials
 Export-ModuleMember -Function Add-AuthHelperCredentials
 Export-ModuleMember -Function Remove-AuthHelperCredentials

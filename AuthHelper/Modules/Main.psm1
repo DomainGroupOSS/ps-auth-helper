@@ -26,7 +26,7 @@ function Fetch-AuthToken() {
         }
     }
 
-    $store = Get-StoreFromConfig
+    $store = Get-AuthHelperStoreFromConfig
 
     $env = $store.GetEnvironmentByName($Environment)
     $creds = $env.GetCredentialsByClientKey($Client)
