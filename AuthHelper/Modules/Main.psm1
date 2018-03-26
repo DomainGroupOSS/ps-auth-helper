@@ -14,28 +14,16 @@ function Fetch-AuthToken() {
         [string]$Scope
     )
 
-    switch ($Environment) {
-        $ENV_LOCAL {
-            $authUri = "https://stage-auth.domain.com.au/v1/connect/token"
-        }
-        $ENV_STAGING {
-            $authUri = "https://stage-auth.domain.com.au/v1/connect/token"
-        }
-        $ENV_PRODUCTION {
-            $authUri = "https://auth.domain.com.au/v1/connect/token"
-        }
-    }
-
     $store = Get-AuthHelperStoreFromConfig
 
     $env = $store.GetEnvironmentByName($Environment)
     $creds = $env.GetCredentialsByClientKey($Client)
 
     if ($creds -eq $null) {
-        Throw "Could now find client: $Client in environment: $Environment"
+        Throw "Could not find client: $Client in environment: $Environment"
     }
 
-    $token = Perform-AuthTokenRequest -AuthUri $authUri -ClientKey $Client -ClientSecret $creds.ClientSecret -Scope $Scope
+    $token = Perform-AuthTokenRequest -AuthUri $env.AuthUri -ClientKey $Client -ClientSecret $creds.ClientSecret -Scope $Scope
     Return $token
 }
 
@@ -158,26 +146,6 @@ function Clear-AuthTokenCache() {
     }
 }
 
-function Get-AuthHelperDefaultEnvironment() {
-    if (!(Test-Path Variable:Global:AuthHelperDefaultEnvironment)) {
-        Set-Variable -Name AuthHelperDefaultEnvironment -Scope Global -Value $ENV_PRODUCTION
-    }
-    Return $AuthHelperDefaultEnvironment
-}
-
-function Set-AuthHelperDefaultEnvironment() {
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory=$true)]
-        [string]$Environment
-    )
-    if (Test-Path Variable:Global:AuthHelperDefaultEnvironment) {
-        Set-Variable -Name AuthHelperDefaultEnvironment -Scope Global -Value $Environment
-    }
-}
-
 Export-ModuleMember -Function Get-AuthTokenWithClientCredentials
 Export-ModuleMember -Function Clear-AuthTokenCache
 Export-ModuleMember -Function Invoke-RestMethodWithClientCredentials
-Export-ModuleMember -Function Get-AuthHelperDefaultEnvironment
-Export-ModuleMember -Function Set-AuthHelperDefaultEnvironment
