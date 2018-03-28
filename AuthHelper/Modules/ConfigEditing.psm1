@@ -1,9 +1,4 @@
 $CONFIG_PATH = "~\.AuthHelper.json"
-$ENV_LOCAL = "Local"
-$ENV_STAGING = "Staging"
-$ENV_PRODUCTION = "DomainProduction"
-$AUTH_URI_STAGING = "https://stage-auth.domain.com.au/v1/connect/token"
-$AUTH_URI_PRODUCTION = "https://auth.domain.com.au/v1/connect/token"
 
 class CredentialStore
 {
@@ -11,6 +6,10 @@ class CredentialStore
     [CredentialEnvironment[]] $Environments
 
     AddEnvironment([CredentialEnvironment] $environment) {
+        if ($this.HasEnvironment($environment.Name)) {
+            Throw "An environment with the name $($environment.Name) already exists."
+        }
+
         $this.Environments = $this.Environments += $environment
     }
 
@@ -18,12 +17,16 @@ class CredentialStore
         $this.Environments = $this.Environments | ? Name -ne $name;
     }
 
+    [boolean] HasEnvironment([string] $name) {
+        return (($this.Environments | ? Name -eq $name) | Measure-Object).Count -eq 1;
+    }
+
     [CredentialEnvironment] GetEnvironmentByName([string] $name) {
         return $this.Environments | ? Name -eq $name | Select-Object -First 1
     }
 
     SetDefault([string] $name) {
-        if ((($this.Environments | ? Name -eq $name) | Measure-Object).Count -eq 1) {
+        if ($this.HasEnvironment($name)) {
             $this.DefaultEnvironmentName = $name
         }
         else {
@@ -38,6 +41,7 @@ class CredentialStore
     }
 
     WriteToConfig() {
+        $this.Environments = $this.Environments | ? Name -ne ""
         $this | ConvertTo-Json -Depth 100 > "~\.AuthHelper.json"
     }
 }
@@ -105,10 +109,6 @@ function Get-AuthHelperCredentials() {
 function Get-AuthHelperStoreFromConfig() {
     if (!(Test-Path $CONFIG_PATH)) {
         $store = [CredentialStore]::new()
-        $store.AddEnvironment([CredentialEnvironment]::new($ENV_LOCAL, $AUTH_URI_STAGING))
-        $store.AddEnvironment([CredentialEnvironment]::new($ENV_STAGING, $AUTH_URI_STAGING))
-        $store.AddEnvironment([CredentialEnvironment]::new($ENV_PRODUCTION, $AUTH_URI_PRODUCTION))
-        $store.SetDefault($ENV_STAGING)
         $store.WriteToConfig()
     }
 
@@ -132,7 +132,11 @@ function Import-CredentialsFromJson(
         }
         $store.AddEnvironment($env)
     }
-    $store.SetDefault($ht["DefaultEnvironmentName"])
+
+    $configuredDefault = $ht["DefaultEnvironmentName"]
+    if (![string]::IsNullOrWhiteSpace($configuredDefault) -and $store.HasEnvironment($configuredDefault)) {
+        $store.SetDefault($configuredDefault)
+    }
 
     return $store
 }

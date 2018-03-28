@@ -1,8 +1,3 @@
-$CONFIG_PATH = "~\.AuthHelper.json"
-$ENV_LOCAL = "Local"
-$ENV_STAGING = "Staging"
-$ENV_PRODUCTION = "DomainProduction"
-
 function Fetch-AuthToken() {
     [CmdletBinding()]
     param(
