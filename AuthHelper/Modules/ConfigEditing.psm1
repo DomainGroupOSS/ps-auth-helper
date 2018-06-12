@@ -210,6 +210,15 @@ function Remove-AuthHelperCredentials() {
     $store.WriteToConfig()
 }
 
+function Get-EnvironmentNames() {
+    $retval = @()
+    $store = Get-AuthHelperStoreFromConfig
+    $store.Environments | Foreach-Object {
+        $retval += $_.Name
+    }
+    return $retval
+}
+
 function Get-AuthHelperDefaultEnvironment() {
     $store = Get-AuthHelperStoreFromConfig
     return $store.DefaultEnvironmentName
@@ -217,13 +226,31 @@ function Get-AuthHelperDefaultEnvironment() {
 
 function Set-AuthHelperDefaultEnvironment() {
     [CmdletBinding()]
-    param(
-        [Parameter(Mandatory=$true)]
-        [string]$EnvironmentName
-    )
-    $store = Get-AuthHelperStoreFromConfig
-    $store.SetDefault($EnvironmentName)
-    $store.WriteToConfig()
+    param()
+    DynamicParam {
+        $runtimeParamDict = New-Object System.Management.Automation.RuntimeDefinedParameterDictionary
+        $environmentParamName = "Environment"
+        $attrCollection = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
+        $attr = New-Object System.Management.Automation.ParameterAttribute
+        $attr.Mandatory = $true
+        $attr.Position = 0
+        $attrCollection.Add($attr)
+        $validateSetAttr = New-Object System.Management.Automation.ValidateSetAttribute(Get-EnvironmentNames)
+        $attrCollection.Add($validateSetAttr)
+        $runtimeParam = New-Object System.Management.Automation.RuntimeDefinedParameter(
+            $environmentParamName, [string], $attrCollection)
+        $runtimeParamDict.Add($environmentParamName, $runtimeParam)
+
+        return $runtimeParamDict
+    }
+    begin {
+        $Environment = $PsBoundParameters[$environmentParamName]
+    }
+    process {
+        $store = Get-AuthHelperStoreFromConfig
+        $store.SetDefault($Environment)
+        $store.WriteToConfig()
+    }
 }
 
 Export-ModuleMember -Function Get-AuthHelperStoreFromConfig
