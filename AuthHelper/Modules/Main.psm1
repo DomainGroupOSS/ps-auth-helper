@@ -101,12 +101,21 @@ function Invoke-RestMethodWithClientCredentials() {
         [Parameter(Mandatory=$false)]
         [string]$Body,
         [Parameter(Mandatory=$false)]
+        [hashtable]$AddHeaders = $null,
+        [Parameter(Mandatory=$false)]
+        [string]$ContentType = $null,
+        [Parameter(Mandatory=$false)]
         [bool]$RequestPayloadIsJson = $true
     )
     $headers = @{}
 
-    if ($Method -eq "Post" -and $RequestPayloadIsJson) {
-        $headers = @{"Content-type"="application/json"}
+    if (($Method -eq "Post" -and $RequestPayloadIsJson) -or ($ContentType -ne $null)) {
+        $ct = if ($ContentType -eq $null) {"application/json"} else {$ContentType}
+        $headers = @{"Content-type"=$ct}
+    }
+
+    if ($AddHeaders -ne $null) {
+        $headers = Merge-HashTables $headers $AddHeaders
     }
 
     if ($Environment -eq "") {
@@ -117,6 +126,8 @@ function Invoke-RestMethodWithClientCredentials() {
     $headers["Authorization"] = "Bearer $accessToken"
 
     Write-Verbose "Calling URI: $Uri"
+    Write-Verbose "Headers: "
+    Write-Verbose "$($headers | Out-String)"
 
     #TODO: other cases where body is not required
     if ($Method -eq "Get") {
@@ -139,6 +150,28 @@ function Clear-AuthTokenCache() {
     if (Test-Path Variable:Global:AuthHelperCache) {
         Set-Variable -Name AuthHelperCache -Scope Global -Value @{}
     }
+}
+
+function Merge-HashTables($htold=$null, $htnew=$null)
+{
+
+<#
+.SYNOPSIS
+Merges two has tables based on their keys.
+
+.LINK
+http://stackoverflow.com/questions/8800375/merging-hashtables-in-powershell-how
+#>
+    $keys = $htold.GetEnumerator() | foreach {$_.key}
+    $keys | foreach {
+        $key = $_
+        if ($htnew.ContainsKey($key))
+        {
+            $htold.Remove($key)
+        }
+    }
+    $htnew = $htold + $htnew
+    return $htnew
 }
 
 Export-ModuleMember -Function Get-AuthTokenWithClientCredentials
