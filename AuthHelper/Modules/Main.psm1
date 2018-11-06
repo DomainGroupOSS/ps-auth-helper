@@ -103,14 +103,14 @@ function Invoke-RestMethodWithClientCredentials() {
         [Parameter(Mandatory=$false)]
         [hashtable]$AddHeaders = $null,
         [Parameter(Mandatory=$false)]
-        [string]$ContentType = $null,
+        [string]$ContentType = "",
         [Parameter(Mandatory=$false)]
         [bool]$RequestPayloadIsJson = $true
     )
     $headers = @{}
 
     if (($Method -eq "Post" -and $RequestPayloadIsJson) -or ($ContentType -ne $null)) {
-        $ct = if ($ContentType -eq $null) {"application/json"} else {$ContentType}
+        $ct = if ($ContentType -eq "") {"application/json"} else {$ContentType}
         $headers = @{"Content-type"=$ct}
     }
 
