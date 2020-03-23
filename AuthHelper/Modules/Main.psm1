@@ -43,6 +43,7 @@ function Perform-AuthTokenRequest() {
 
     $authResponse = ( `
         Invoke-RestMethod `
+            -Verbose:($VerbosePreference -eq "Continue") `
             -Method Post `
             -Uri $AuthUri `
             -Body "grant_type=client_credentials&scope=$Scope" `
@@ -127,23 +128,31 @@ function Invoke-RestMethodWithClientCredentials() {
 
     Write-Verbose "Calling URI: $Uri"
     Write-Verbose "Headers: "
-    Write-Verbose "$($headers | Out-String)"
+    Write-Verbose "$($headers | ConvertTo-Json -Depth 100)"
 
     #TODO: other cases where body is not required
-    if ($Method -eq "Get") {
-        Invoke-RestMethod `
-            -Headers $headers `
-            -Method $Method `
-            -Uri $Uri
+    try {
+        if ($Method -eq "Get") {
+            Invoke-RestMethod `
+                -Verbose:($VerbosePreference -eq "Continue") `
+                -Headers $headers `
+                -Method $Method `
+                -Uri $Uri
+        }
+        else {
+            Invoke-RestMethod `
+                -Verbose:($VerbosePreference -eq "Continue") `
+                -Headers $headers `
+                -Method $Method `
+                -Uri $Uri `
+                -Body $Body
+        }
     }
-    else {
-        Invoke-RestMethod `
-            -Headers $headers `
-            -Method $Method `
-            -Uri $Uri `
-            -Body $Body
+    catch {
+        $e = $_.Exception
+        #Write-Verbose ($e.Response | ConvertTo-Json -Depth 100)
+        throw $e
     }
-
 }
 
 function Clear-AuthTokenCache() {
@@ -174,6 +183,7 @@ http://stackoverflow.com/questions/8800375/merging-hashtables-in-powershell-how
     return $htnew
 }
 
+Export-ModuleMember -Function Perform-AuthTokenRequest
 Export-ModuleMember -Function Get-AuthTokenWithClientCredentials
 Export-ModuleMember -Function Clear-AuthTokenCache
 Export-ModuleMember -Function Invoke-RestMethodWithClientCredentials
